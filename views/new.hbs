@@ -1,0 +1,32 @@
+{{#with Product}}
+<form action="/products" method="post">
+  <h1>Product Addition</h1>
+  <label> Name:
+    <input type="text" name="name" id="">
+  </label>
+
+  <label> Price:
+    <input type="text" name="price" id="">
+  </label>
+
+  <label> Inventory:
+    <input type="text" name="inventory" id="">
+  </label>
+  <input type="submit" value="Submit">
+</form> {{/with}} {{#with Article}}
+<form action="/articles" method="post">
+  <h1>Article Addition</h1>
+  <label> Title:
+    <input type="text" name="title" id="">
+  </label>
+
+  <label> Body:
+    <input type="text" name="body" id="">
+  </label>
+
+  <label> Author:
+    <input type="text" name="author" id="">
+  </label>
+  <input type="submit" value="Submit">
+</form> {{/with}}
+<br> {{> footer}}
