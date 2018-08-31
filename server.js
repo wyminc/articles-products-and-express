@@ -29,6 +29,12 @@ app.get("/products/new", (req, res) => {
   res.render("new", ifProduct);
 })
 
+app.get("/products/:id", (req, res) => {
+  const { id } = req.params;
+  const product = DB_Product.getItemById(id);
+  res.render("product", product);
+})
+
 app.get("/products", (req, res) => {
   const products = DB_Product.all();
   if (products.length > 0) {
@@ -37,12 +43,6 @@ app.get("/products", (req, res) => {
     const ifProduct = { Product: "Yes" };
     res.render("index", ifProduct);
   }
-})
-
-app.get("/products/:id", (req, res) => {
-  const { id } = req.params;
-  const product = DB_Product.getItemById(id);
-  res.render("product", product);
 })
 
 app.post("/products", (req, res) => {
