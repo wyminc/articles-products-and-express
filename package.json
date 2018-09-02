@@ -24,5 +24,8 @@
     "mocha": "^5.2.0",
     "nodemon": "^1.18.4",
     "supertest": "^3.1.0"
+  },
+  "dependencies": {
+    "method-override": "^3.0.0"
   }
 }

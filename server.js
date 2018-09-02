@@ -1,4 +1,5 @@
 const express = require("express");
+const methodOverride = require("method-override")
 const app = express();
 const bp = require("body-parser");
 const exphbs = require("express-handlebars");
@@ -12,6 +13,7 @@ const DB_Article = new Article();
 
 const PORT = process.env.PORT;
 
+app.use(methodOverride("_method"))
 app.use(express.static("public"));
 
 app.use(bp.urlencoded({ extended: true }));
@@ -29,6 +31,42 @@ app.get("/products/new", (req, res) => {
   res.render("new", ifProduct);
 })
 
+app.get("/products/edit", (req, res) => {
+  const ifProduct = { Product: "Yes" };
+  res.render("edit", ifProduct);
+})
+
+app.get("/products/blankedit", (req, res) => {
+  console.log(req.url, "DAFUQAMILOOKINGAT")
+  const id = req.query.id;
+  console.log(typeof id, "typeofid")
+  allArr = DB_Product.all();
+  console.log(allArr, "ALLARR");
+  filteredArr = allArr.filter(product => product.id === parseInt(id));
+  filteredObj = filteredArr[0];
+  console.log(filteredArr, "GIVE ME MY FUCKING FILTEREDARR");
+  console.log(filteredObj, "THIS SHOULD BE MY FUCKING ANSWER");
+  if (filteredArr.length > 0) {
+    if (isNaN(((filteredObj).name)) === true && isNaN(((filteredObj).price)) === false && isNaN(((filteredObj).inventory)) === false) {
+      const submittedProduct = filteredObj;
+      DB_Product.updateItemById(id, submittedProduct);
+      res.redirect(`/products/${id}`);
+    } else {
+      const ifProduct = { Product: "Yes", Error: "Input" };
+      res.render("edit-redirect-one", ifProduct);
+    }
+  } else {
+    const ifProduct = { Product: "Yes", Error: "ID" };
+    res.render("edit-redirect-two", ifProduct);
+  }
+})
+
+app.get("/products/:id/edit", (req, res) => {
+  const { id } = req.params;
+  const product = DB_Product.getItemById(id);
+  res.render("edit", product);
+})
+
 app.get("/products/:id", (req, res) => {
   const { id } = req.params;
   const product = DB_Product.getItemById(id);
@@ -37,19 +75,32 @@ app.get("/products/:id", (req, res) => {
 
 app.get("/products", (req, res) => {
   const products = DB_Product.all();
+  const prodObj = { Products: { products } }
   if (products.length > 0) {
-    res.render("index", { products });
+    res.render("index", prodObj);
   } else {
     const ifProduct = { Product: "Yes" };
     res.render("index", ifProduct);
   }
 })
 
+app.put("/products/:id", (req, res) => {
+  const { id } = req.params;
+  if (isNaN(((req.body).name)) === true && isNaN(((req.body).price)) === false && isNaN(((req.body).inventory)) === false) {
+    const submittedProduct = req.body;
+    DB_Product.updateItemById(id, submittedProduct);
+    res.redirect(`/products/${id}`);
+  } else {
+    const ifProduct = { Product: "Yes", Error: "Input" };
+    res.render("edit-redirect", ifProduct);
+  }
+
+})
+
 app.post("/products", (req, res) => {
   if (isNaN(((req.body).name)) === true && isNaN(((req.body).price)) === false && isNaN(((req.body).inventory)) === false) {
     const submittedProduct = req.body;
     DB_Product.add(submittedProduct);
-    // res.redirect(`/products/${((DB_Product.all()).reverse())[0].id}`);
     res.redirect("/products");
   } else {
     const ifProduct = { Product: "Yes" };
