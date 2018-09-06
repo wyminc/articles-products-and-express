@@ -1,0 +1,40 @@
+{{#with SpecificProduct}}
+<script>
+  function submissionFunction() {
+    let name = (document.getElementById("productName")).value;
+    var action_src = `/products/${name}?_method=DELETE`;
+    var deleteForm = document.getElementById('deleteForm');
+    deleteForm.action = action_src;
+  }
+</script>
+<form id="deleteForm" onsubmit="submissionFunction()" method="post">
+  <h1>Product Deletion</h1>
+  <div>Name does not exist</div>
+  <br>
+  <label> Name:
+    <input type="text" name="name" value="{{name}}" id="productName">
+  </label>
+
+  <input type="submit" value="Submit">
+</form>
+<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with articles}}
+<script>
+  function submissionFunction() {
+    let title = (document.getElementById("articleTitle")).value;
+    var action_src = `/articles/${title}?_method=DELETE`;
+    var deleteForm = document.getElementById('deleteForm');
+    deleteForm.action = action_src;
+  }
+</script>
+<form id="deleteForm" onsubmit="submissionFunction()" method="post">
+  <h1>Article Deletion</h1>
+  <div>Title does not exist</div>
+  <br>
+  <label> Title:
+    <input type="text" name="title" value="{{title}}" id="articleTitle">
+  </label>
+
+  <input type="submit" value="Submit">
+</form>
+<br><a href="/articles">ARTICLES PAGE</a>{{/with}}
+<br> {{> footer}}

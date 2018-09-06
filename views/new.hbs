@@ -13,7 +13,8 @@
     <input type="text" name="inventory" id="">
   </label>
   <input type="submit" value="Submit">
-</form> {{/with}} {{#with Article}}
+</form>
+<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with Article}}
 <form action="/articles" method="post">
   <h1>Article Addition</h1>
   <label> Title:
@@ -28,5 +29,6 @@
     <input type="text" name="author" id="">
   </label>
   <input type="submit" value="Submit">
-</form> {{/with}}
+</form>
+<br><a href="/articles">ARTICLES PAGE</a>{{/with}}
 <br> {{> footer}}

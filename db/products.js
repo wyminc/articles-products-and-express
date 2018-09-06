@@ -48,7 +48,11 @@ class Products {
   }
 
   getItemById(id) {
-    return this._storage.filter((product) => id == product.id)[0];
+    return this._storage.filter((product) => parseInt(id) === parseInt(product.id))[0];
+  }
+
+  getItemByName(name) {
+    return this._storage.filter((product) => name === product.name)[0];
   }
 
   add(product) {
@@ -83,6 +87,14 @@ class Products {
 
   deleteItemById(id) {
     let filteredArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id))[0];
+    let filteredArrIndex = this._storage.indexOf(filteredArr);
+    this._deletedStorage.push(this._storage[filteredArrIndex]);
+    (this._storage[filteredArrIndex]).delete = true;
+    return this._storage.filter(product => product.delete !== true);
+  }
+
+  deleteItemByName(name) {
+    let filteredArr = this._storage.filter((product) => name === product.name)[0];
     let filteredArrIndex = this._storage.indexOf(filteredArr);
     this._deletedStorage.push(this._storage[filteredArrIndex]);
     (this._storage[filteredArrIndex]).delete = true;
