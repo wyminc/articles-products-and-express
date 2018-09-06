@@ -1,9 +1,9 @@
-{{#if id}}
-<form method="post" action="/products/{{id}}?_method=PUT">
+{{#with urlProdObj}}
+<form method="get" action="/products/blankedit">
   <h1>Product Editing</h1>
   <div>ID does not exist</div>
-  <label> ID:
-    <input readonly id="" type="text" name="id" value="{{id}}">
+  <br><label> ID:
+    <input id="" type="text" name="id" value="{{id}}">
   </label>
 
   <label> Name:
@@ -18,9 +18,11 @@
     <input id="" type="text" name="inventory" value="{{inventory}}">
   </label>
   <input type="submit" value="Submit">
-</form> {{/if}} {{#if title}}
-<form action="/articles" method="post">
+</form>
+<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with urlArtObj}}
+<form method="get" action="/articles/blankedit">
   <h1>Article Editing</h1>
+  <br><div>Title does not exist</div>
   <label> Title:
     <input type="text" name="title" value="{{title}}" id="">
   </label>
@@ -33,5 +35,6 @@
     <input type="text" name="author" value="{{author}}" id="">
   </label>
   <input type="submit" value="Submit">
-</form> {{/if}}
+</form>
+<br><a href="/articles">ARTICLES PAGE</a>{{/with}}
 <br> {{> footer}}

@@ -1,5 +1,5 @@
 {{#with Product}}
-<form id="myForm" method="get" action="/products/blankedit">
+<form method="get" action="/products/blankedit">
   <h1>Product Editing</h1>
   <label> ID:
     <input id="productID" type="text" name="id">
@@ -18,8 +18,8 @@
   </label>
   <input type="submit" value="Submit">
 </form>
-{{/with}} {{#with Article}}
-<form action="/articles" method="post">
+<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with Article}}
+<form method="get" action="/articles/blankedit">
   <h1>Article Editing</h1>
   <label> Title:
     <input type="text" name="title" id="">
@@ -34,9 +34,9 @@
   </label>
   <input type="submit" value="Submit">
 </form>
-{{/with}} {{#if id}}
+<br><a href="/articles">ARTICLES PAGE</a>{{/with}} {{#with Products}}
 <form method="post" action="/products/{{id}}?_method=PUT">
-  <h1>Product Addition</h1>
+  <h1>Product Editing</h1>
   <label> ID:
     <input readonly id="" type="text" name="id" value="{{id}}">
   </label>
@@ -53,9 +53,10 @@
     <input id="" type="text" name="inventory" value="{{inventory}}">
   </label>
   <input type="submit" value="Submit">
-</form> {{/if}} {{#if title}}
-<form action="/articles" method="post">
-  <h1>Article Addition</h1>
+</form>
+<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with Articles}}
+<form method="post" action="/articles/{{title}}?_method=PUT">
+  <h1>Article Editing</h1>
   <label> Title:
     <input type="text" name="title" value="{{title}}" id="">
   </label>
@@ -68,5 +69,6 @@
     <input type="text" name="author" value="{{author}}" id="">
   </label>
   <input type="submit" value="Submit">
-</form> {{/if}}
+</form>
+<br><a href="/articles">ARTICLES PAGE</a>{{/with}}
 <br> {{> footer}}

@@ -37,34 +37,45 @@ app.get("/products/edit", (req, res) => {
 })
 
 app.get("/products/blankedit", (req, res) => {
-  console.log(req.url, "DAFUQAMILOOKINGAT")
-  const id = req.query.id;
-  console.log(typeof id, "typeofid")
-  allArr = DB_Product.all();
-  console.log(allArr, "ALLARR");
-  filteredArr = allArr.filter(product => product.id === parseInt(id));
-  filteredObj = filteredArr[0];
-  console.log(filteredArr, "GIVE ME MY FUCKING FILTEREDARR");
-  console.log(filteredObj, "THIS SHOULD BE MY FUCKING ANSWER");
+  let stringInfo = ((req.url.split("?"))[1]);
+  let newArr = stringInfo.split("&").join("=").split("=");
+  const id = newArr[1];
+  let allArr = DB_Product.all();
+  let filteredArr = allArr.filter(product => parseInt(product.id) === parseInt(id));
   if (filteredArr.length > 0) {
-    if (isNaN(((filteredObj).name)) === true && isNaN(((filteredObj).price)) === false && isNaN(((filteredObj).inventory)) === false) {
-      const submittedProduct = filteredObj;
-      DB_Product.updateItemById(id, submittedProduct);
+    if (isNaN(newArr[3]) === true && isNaN(newArr[5]) === false && isNaN(newArr[7]) === false) {
+      const productArr = newArr;
+      DB_Product.updateItemByIdBlank(id, productArr);
       res.redirect(`/products/${id}`);
     } else {
-      const ifProduct = { Product: "Yes", Error: "Input" };
+      const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
+      const ifProduct = { Product: "Yes", Error: "Input", urlProdObj };
       res.render("edit-redirect-one", ifProduct);
     }
   } else {
-    const ifProduct = { Product: "Yes", Error: "ID" };
+    const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
+    const ifProduct = { Product: "Yes", Error: "ID", urlProdObj };
     res.render("edit-redirect-two", ifProduct);
+  }
+})
+
+app.get("/products/:id/delete", (req, res) => {
+  const { id } = req.params;
+  DB_Product.deleteItemById(id);
+  const products = DB_Product.all();
+  const prodObj = { Products: { products } }
+  if (products.length > 0) {
+    res.render("indexDeleted", prodObj);
+  } else {
+    const ifProduct = { Product: { products } };
+    res.render("indexDeleted", ifProduct);
   }
 })
 
 app.get("/products/:id/edit", (req, res) => {
   const { id } = req.params;
   const product = DB_Product.getItemById(id);
-  res.render("edit", product);
+  res.render("edit", { Products: product });
 })
 
 app.get("/products/:id", (req, res) => {
@@ -91,10 +102,11 @@ app.put("/products/:id", (req, res) => {
     DB_Product.updateItemById(id, submittedProduct);
     res.redirect(`/products/${id}`);
   } else {
-    const ifProduct = { Product: "Yes", Error: "Input" };
-    res.render("edit-redirect", ifProduct);
+    const { id } = req.params;
+    const product = DB_Product.getItemById(id);
+    const ifProduct = { Product: "Yes", Error: "Input", product };
+    res.render("edit-redirect-one", ifProduct);
   }
-
 })
 
 app.post("/products", (req, res) => {
@@ -108,18 +120,92 @@ app.post("/products", (req, res) => {
   }
 })
 
+app.delete("/products/:id"), (req, res) => {
+  const { id } = req.params;
+  DB_Product.deleteItemById(id);
+  res.redirect("/products");
+}
+
 app.get("/articles/new", (req, res) => {
   const ifArticle = { Article: "Yes" };
   res.render("new", ifArticle)
 })
 
+app.get("/articles/edit", (req, res) => {
+  const ifArticle = { Article: "Yes" };
+  res.render("edit", ifArticle);
+})
+
+app.get("/articles/blankedit", (req, res) => {
+  let stringInfo = ((req.url.split("?"))[1]);
+  let newArr = stringInfo.split("&").join("=").split("=");
+  const title = newArr[1];
+  let allArr = DB_Article.all();
+  let filteredArr = allArr.filter(article => title === article.title);
+  if (filteredArr.length > 0) {
+    if (isNaN(newArr[1]) === true && isNaN(newArr[3]) === true && isNaN(newArr[5]) === true) {
+      const articleArr = newArr;
+      DB_Article.updateItemByTitleBlank(title, articleArr);
+      res.redirect(`/articles/${title}`);
+    } else {
+      const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
+      const ifArticle = { Article: "Yes", Error: "Input", urlArtObj };
+      res.render("edit-redirect-one", ifArticle);
+    }
+  } else {
+    const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
+    const ifArticle = { Article: "Yes", Error: "Title", urlArtObj };
+    res.render("edit-redirect-two", ifArticle);
+  }
+})
+
+app.get("/articles/:title/delete", (req, res) => {
+  const { title } = req.params;
+  DB_Article.deleteItemByTitle(title);
+  const articles = DB_Article.all();
+  const artObj = { Articles: { articles } }
+  if (articles.length > 0) {
+    res.render("indexDeleted", artObj);
+  } else {
+    const ifArticle = { Article: { articles } };
+    res.render("indexDeleted", ifArticle);
+  }
+})
+
+app.get("/articles/:title/edit", (req, res) => {
+  const { title } = req.params;
+  const article = DB_Article.getItemByTitle(title);
+  res.render("edit", { Articles: article });
+})
+
+app.get("/articles/:title", (req, res) => {
+  const { title } = req.params;
+  const product = DB_Article.getItemByTitle(title);
+  res.render("article", product);
+})
+
 app.get("/articles", (req, res) => {
   const articles = DB_Article.all();
+  const artObj = { Articles: { articles } }
   if (articles.length > 0) {
-    res.render("index", { articles });
+    res.render("index", artObj);
   } else {
     const ifArticle = { Article: "Yes" };
     res.render("index", ifArticle);
+  }
+})
+
+app.put("/articles/:title", (req, res) => {
+  const { title } = req.params;
+  if (isNaN(((req.body).title)) === true && isNaN(((req.body).body)) === true && isNaN(((req.body).author)) === true) {
+    const submittedArticle = req.body;
+    DB_Article.updateItemByTitle(title, submittedArticle);
+    res.redirect(`/articles/${title}`);
+  } else {
+    const { title } = req.params;
+    const article = DB_Article.getItemByTitle(title);
+    const ifArticle = { Article: "Yes", Error: "Input", article };
+    res.render("edit-redirect-one", ifArticle);
   }
 })
 

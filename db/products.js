@@ -59,17 +59,30 @@ class Products {
     return product.id;
   }
 
-  updateItemById(id, info) {
-    let filteredArr = this._storage.filter((product) => parseInt(id) === product.id)[0];
+  updateItemByIdBlank(id, arr) {
+    let filteredArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id))[0];
     let filteredArrIndex = this._storage.indexOf(filteredArr);
     this._oldStorage.push(this._storage[filteredArrIndex]);
-    this._storage.splice(filteredArrIndex, 1, info);
+    this._storage[filteredArrIndex].id = arr[1];
+    this._storage[filteredArrIndex].name = arr[3];
+    this._storage[filteredArrIndex].price = arr[5];
+    this._storage[filteredArrIndex].inventory = arr[7];
     (this._storage[filteredArrIndex]).version += 1;
-    return this._storage.filter((product) => id == product.id)[0];
+  }
+
+  updateItemById(id, info) {
+    let filteredArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id))[0];
+    let filteredArrIndex = this._storage.indexOf(filteredArr);
+    this._oldStorage.push(this._storage[filteredArrIndex]);
+    this._storage[filteredArrIndex].id = info.id;
+    this._storage[filteredArrIndex].name = info.name;
+    this._storage[filteredArrIndex].price = info.price;
+    this._storage[filteredArrIndex].inventory = info.inventory;
+    (this._storage[filteredArrIndex]).version += 1;
   }
 
   deleteItemById(id) {
-    let filteredArr = this._storage.filter((product) => parseInt(id) === product.id)[0];
+    let filteredArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id))[0];
     let filteredArrIndex = this._storage.indexOf(filteredArr);
     this._deletedStorage.push(this._storage[filteredArrIndex]);
     (this._storage[filteredArrIndex]).delete = true;
