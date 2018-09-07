@@ -19,28 +19,50 @@ Router.get("/articles/delete", (req, res) => {
   res.render("delete", ifArticle);
 })
 
-Router.get("/articles/blankedit", (req, res) => {
-  let stringInfo = ((req.url.split("?"))[1]);
-  let newArr = stringInfo.split("&").join("=").split("=");
-  const title = newArr[1];
-  let allArr = DB_Article.all();
-  let filteredArr = allArr.filter(article => title === article.title);
-  if (filteredArr.length > 0) {
-    if (isNaN(newArr[1]) === true && isNaN(newArr[3]) === true && isNaN(newArr[5]) === true) {
-      const articleArr = newArr;
-      DB_Article.updateItemByTitleBlank(title, articleArr);
-      res.redirect(`/articles/${title}`);
-    } else {
-      const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
-      const ifArticle = { Article: "Yes", Error: "Input", urlArtObj };
-      res.render("edit-redirect-one", ifArticle);
-    }
+Router.get("/articles/deleted", (req, res) => {
+  const articles = DB_Article.deleted();
+  const artObj = { Articles: { articles } }
+  if (articles.length > 0) {
+    res.render("deleted-items", artObj);
   } else {
-    const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
-    const ifArticle = { Article: "Yes", Error: "Title", urlArtObj };
-    res.render("edit-redirect-two", ifArticle);
+    const ifArticle = { Article: "Yes" };
+    res.render("deleted-items", ifArticle);
   }
 })
+
+Router.get("/articles/old", (req, res) => {
+  const articles = DB_Article.old();
+  const artObj = { Articles: { articles } }
+  if (articles.length > 0) {
+    res.render("previous-items", artObj);
+  } else {
+    const ifArticle = { Article: "Yes" };
+    res.render("previous-items", ifArticle);
+  }
+})
+
+// Router.get("/articles/blankedit", (req, res) => {
+//   let stringInfo = ((req.url.split("?"))[1]);
+//   let newArr = stringInfo.split("&").join("=").split("=");
+//   const title = newArr[1];
+//   let allArr = DB_Article.all();
+//   let filteredArr = allArr.filter(article => title === article.title);
+//   if (filteredArr.length > 0) {
+//     if (isNaN(newArr[1]) === true && isNaN(newArr[3]) === true && isNaN(newArr[5]) === true) {
+//       const articleArr = newArr;
+//       DB_Article.updateItemByTitleBlank(title, articleArr);
+//       res.redirect(`/articles/${title}`);
+//     } else {
+//       const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
+//       const ifArticle = { Article: "Yes", Error: "Input", urlArtObj };
+//       res.render("edit-redirect-one", ifArticle);
+//     }
+//   } else {
+//     const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
+//     const ifArticle = { Article: "Yes", Error: "Title", urlArtObj };
+//     res.render("edit-redirect-two", ifArticle);
+//   }
+// })
 
 Router.get("/articles/:title/delete", (req, res) => {
   const { title } = req.params;
@@ -82,6 +104,47 @@ Router.get("/articles/:title", (req, res) => {
   }
 })
 
+Router.get("/articles/deleted/:id/restore", (req, res) => {
+  const { id } = req.params;
+  DB_Article.restoreDeletedItem(id);
+  const articles = DB_Article.all();
+  const artObj = { Articles: { articles } }
+  if (articles.length > 0) {
+    res.render("index", artObj);
+  } else {
+    const ifArticle = { Article: "Yes" };
+    res.render("index", ifArticle);
+  }
+})
+
+Router.get("/articles/deleted/:id", (req, res) => {
+  const { id } = req.params;
+  const article = DB_Article.getDeletedItemById(id);
+  res.render("deletedArticle", article);
+})
+
+Router.get("/articles/old/:id/:version/restore", (req, res) => {
+  const version = (req.params).id;
+  const id = (req.params).version;
+  const article = DB_Article.getPreviousItemById(id, version);
+  DB_Article.restorePreviousItemVersion(id, article);
+  const articles = DB_Article.all();
+  const artObj = { Articles: { articles } }
+  if (articles.length > 0) {
+    res.render("index", artObj);
+  } else {
+    const ifArticle = { Article: "Yes" };
+    res.render("index", ifArticle);
+  }
+})
+
+Router.get("/articles/old/:id/:version", (req, res) => {
+  const version = (req.params).id;
+  const id = (req.params).version;
+  const article = DB_Article.getPreviousItemById(id, version);
+  res.render("previousArticle", article);
+})
+
 Router.get("/articles", (req, res) => {
   const articles = DB_Article.all();
   const artObj = { Articles: { articles } }
@@ -104,15 +167,16 @@ Router.post("/articles", (req, res) => {
   }
 })
 
-Router.put("/articles/:title", (req, res) => {
-  const { title } = req.params;
+Router.put("/articles/:id", (req, res) => {
   if (isNaN(((req.body).title)) === true && isNaN(((req.body).body)) === true && isNaN(((req.body).author)) === true) {
+    const { id } = req.params;
     const submittedArticle = req.body;
-    DB_Article.updateItemByTitle(title, submittedArticle);
-    res.redirect(`/articles/${title}`);
+    DB_Article.updateItemById(id, submittedArticle);
+    const newTitle = submittedArticle.title
+    res.redirect(`/articles/${newTitle}`);
   } else {
-    const { title } = req.params;
-    const article = DB_Article.getItemByTitle(title);
+    const { id } = req.params;
+    const article = DB_Article.getItemById(id);
     const ifArticle = { Article: "Yes", Error: "Input", article };
     res.render("edit-redirect-one", ifArticle);
   }
@@ -121,7 +185,6 @@ Router.put("/articles/:title", (req, res) => {
 Router.delete("/articles/:title", (req, res) => {
   const { title } = req.params;
   const allArr = DB_Article.all();
-  const specific = DB_Article.getItemByTitle(title);
   let filteredArr = allArr.filter(article => article.title === title);
   if (filteredArr.length > 0) {
     if (allArr.length - 1 > 0) {
@@ -136,7 +199,7 @@ Router.delete("/articles/:title", (req, res) => {
       res.render("indexDeleted", ifArticle);
     }
   } else {
-    const ifArticle = { Article: "Yes", Error: "Title", SpecificArticle: specific };
+    const ifArticle = { Article: "Yes", Error: "Title" };
     res.render("delete-redirect", ifArticle);
   }
 })

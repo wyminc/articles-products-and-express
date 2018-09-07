@@ -1,40 +1,4 @@
-{{#with Product}}
-<form method="get" action="/products/blankedit">
-  <h1>Product Editing</h1>
-  <label> ID:
-    <input id="productID" type="text" name="id">
-  </label>
-
-  <label> Name:
-    <input id="" type="text" name="name">
-  </label>
-
-  <label> Price:
-    <input id="" type="text" name="price">
-  </label>
-
-  <label> Inventory:
-    <input id="" type="text" name="inventory">
-  </label>
-  <input type="submit" value="Submit">
-</form>
-<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with Article}}
-<form method="get" action="/articles/blankedit">
-  <h1>Article Editing</h1>
-  <label> Title:
-    <input type="text" name="title" id="">
-  </label>
-
-  <label> Body:
-    <input type="text" name="body" id="">
-  </label>
-
-  <label> Author:
-    <input type="text" name="author" id="">
-  </label>
-  <input type="submit" value="Submit">
-</form>
-<br><a href="/articles">ARTICLES PAGE</a>{{/with}} {{#with Products}}
+{{#with Products}}
 <form method="post" action="/products/{{id}}?_method=PUT">
   <h1>Product Editing</h1>
   <label> ID:
@@ -55,7 +19,7 @@
   <input type="submit" value="Submit">
 </form>
 <br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with Articles}}
-<form method="post" action="/articles/{{title}}?_method=PUT">
+<form method="post" action="/articles/{{id}}?_method=PUT">
   <h1>Article Editing</h1>
   <label> Title:
     <input type="text" name="title" value="{{title}}" id="">

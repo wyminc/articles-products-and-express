@@ -1,4 +1,4 @@
-{{#with SpecificProduct}}
+{{#with Product}}
 <script>
   function submissionFunction() {
     let name = (document.getElementById("productName")).value;
@@ -9,15 +9,14 @@
 </script>
 <form id="deleteForm" onsubmit="submissionFunction()" method="post">
   <h1>Product Deletion</h1>
-  <div>Name does not exist</div>
   <br>
   <label> Name:
-    <input type="text" name="name" value="{{name}}" id="productName">
+    <input type="text" name="name" value="Name does not exist" id="productName">
   </label>
 
   <input type="submit" value="Submit">
 </form>
-<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with articles}}
+<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with Article}}
 <script>
   function submissionFunction() {
     let title = (document.getElementById("articleTitle")).value;
@@ -28,10 +27,9 @@
 </script>
 <form id="deleteForm" onsubmit="submissionFunction()" method="post">
   <h1>Article Deletion</h1>
-  <div>Title does not exist</div>
   <br>
   <label> Title:
-    <input type="text" name="title" value="{{title}}" id="articleTitle">
+    <input type="text" name="title" value="Title does not exist" id="articleTitle">
   </label>
 
   <input type="submit" value="Submit">

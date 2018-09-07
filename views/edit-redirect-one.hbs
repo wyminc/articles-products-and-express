@@ -1,49 +1,7 @@
-{{#with urlProdObj}}
+{{#with product}}
 <form method="post" action="/products/{{id}}?_method=PUT">
   <h1>Product Editing</h1>
   <div>Name needs to be a string, Price needs to be a number, and Inventory needs to be a number</div>
-  <br><label> ID:
-    <input readonly id="" type="text" name="id" value="{{id}}">
-  </label>
-
-  <label> Name:
-    <input id="" type="text" name="name" value="{{name}}">
-  </label>
-
-  <label> Price:
-    <input id="" type="text" name="price" value="{{price}}">
-  </label>
-
-  <label> Inventory:
-    <input id="" type="text" name="inventory" value="{{inventory}}">
-  </label>
-  <input type="submit" value="Submit">
-</form>
-<br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with urlArtObj}}
-<form method="get" action="/articles/blankedit">
-  <h1>Article Editing</h1>
-  <div>Title needs to be a string, Body needs to be a string, and Author needs to be a string</div>
-  <br><label> Title:
-    <input type="text" name="title" value="{{title}}" id="">
-  </label>
-
-  <label> Body:
-    <input type="text" name="body" value="{{body}}" id="">
-  </label>
-
-  <label> Author:
-    <input type="text" name="author" value="{{author}}" id="">
-  </label>
-  <input type="submit" value="Submit">
-</form>
-<br><a href="/articles">ARTICLES PAGE</a>{{/with}} {{#with product}}
-<form method="post" action="/products/{{id}}?_method=PUT">
-  <h1>Product Editing</h1>
-  <div>Name needs to be a string, Price needs to be a number, and Inventory needs to be a number</div>
-  <br><label> ID:
-    <input readonly id="" type="text" name="id" value="{{id}}">
-  </label>
-
   <label> Name:
     <input id="" type="text" name="name" value="{{name}}">
   </label>
@@ -58,7 +16,7 @@
   <input type="submit" value="Submit">
 </form>
 <br><a href="/products">PRODUCTS PAGE</a>{{/with}} {{#with article}}
-<form method="post" action="/articles/{{title}}?_method=PUT">
+<form method="post" action="/articles/{{id}}?_method=PUT">
   <h1>Article Editing</h1>
   <div>Title needs to be a string, Body needs to be a string, and Author needs to be a string</div>
   <br><label> Title:

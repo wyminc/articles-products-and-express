@@ -16,15 +16,19 @@
   <input type="submit" value="Submit">
 </form>
 <br>
+<br>
 <br><a href="/products/new">NEW PRODUCT</a>
-<br><a href="/products/edit">EDIT PRODUCT</a>
 <br><a href="/products/delete">DELETE PRODUCT</a>
 <br>
 <br> {{#each products}}
 <div>
   <a href="/products/{{id}}"> {{name}} </a>
 </div>
-{{/each}} {{/with}} {{#with Articles}}
+{{/each}}
+<br>
+<br> <a href="/products/old">PREVIOUS PRODUCTS</a>
+<br> <a href="/products/deleted">DELETED PRODUCTS</a>
+{{/with}} {{#with Articles}}
 <script>
   function submissionFunction() {
     let title = (document.getElementById("articleTitle")).value;
@@ -42,17 +46,26 @@
   <input type="submit" value="Submit">
 </form>
 <br>
+<br>
 <br><a href="/articles/new">NEW ARTICLE</a>
-<br><a href="/articles/edit">EDIT ARTICLE</a>
 <br><a href="/articles/delete">DELETE ARTICLE</a>
 <br>
 <br> {{#each articles}}
 <div>
   <a href="/articles/{{title}}"> {{title}} </a>
 </div>
-{{/each}} {{/with}} {{#with Product}}
+{{/each}}
+<br>
+<br> <a href="/articles/old">PREVIOUS ARTICLES</a>
+<br> <a href="/articles/deleted">DELETED ARTICLES</a>{{/with}} {{#with Product}}
 <h1>Products</h1>
-<a href="/products/new">NEW PRODUCT</a>{{/with}} {{#with Article}}
+<a href="/products/new">NEW PRODUCT</a>
+<br>
+<br> <a href="/products/old">PREVIOUS PRODUCTS</a>
+<br> <a href="/products/deleted">DELETED PRODUCTS</a>{{/with}} {{#with Article}}
 <h1>Articles</h1>
-<a href="/articles/new">NEW ARTICLE</a>{{/with}}
+<a href="/articles/new">NEW ARTICLE</a>
+<br>
+<br> <a href="/articles/old">PREVIOUS ARTICLES</a>
+<br> <a href="/articles/deleted">DELETED ARTICLES</a>{{/with}}
 <br> {{> footer}}

@@ -19,28 +19,52 @@ Router.get("/products/delete", (req, res) => {
   res.render("delete", ifProduct);
 })
 
-Router.get("/products/blankedit", (req, res) => {
-  let stringInfo = ((req.url.split("?"))[1]);
-  let newArr = stringInfo.split("&").join("=").split("=");
-  const id = newArr[1];
-  let allArr = DB_Product.all();
-  let filteredArr = allArr.filter(product => parseInt(product.id) === parseInt(id));
-  if (filteredArr.length > 0) {
-    if (isNaN(newArr[3]) === true && isNaN(newArr[5]) === false && isNaN(newArr[7]) === false) {
-      const productArr = newArr;
-      DB_Product.updateItemByIdBlank(id, productArr);
-      res.redirect(`/products/${id}`);
-    } else {
-      const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
-      const ifProduct = { Product: "Yes", Error: "Input", urlProdObj };
-      res.render("edit-redirect-one", ifProduct);
-    }
+Router.get("/products/deleted", (req, res) => {
+  const products = DB_Product.deleted();
+  const prodObj = { Products: { products } }
+  if (products.length > 0) {
+    res.render("deleted-items", prodObj);
   } else {
-    const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
-    const ifProduct = { Product: "Yes", Error: "ID", urlProdObj };
-    res.render("edit-redirect-two", ifProduct);
+    const ifProduct = { Product: "Yes" };
+    res.render("deleted-items", ifProduct);
   }
 })
+
+Router.get("/products/old", (req, res) => {
+  const products = DB_Product.old();
+  const prodObj = { Products: { products } }
+  if (products.length > 0) {
+    res.render("previous-items", prodObj);
+  } else {
+    const ifProduct = { Product: "Yes" };
+    res.render("previous-items", ifProduct);
+  }
+})
+
+// Router.get("/products/blankedit", (req, res) => {
+//   let stringInfo = ((req.url.split("?"))[1]);
+//   let newArr = stringInfo.split("&").join("=").split("=");
+//   const name = newArr[1];
+//   let allArr = DB_Product.all();
+//   let filteredArr = allArr.filter(product => product.name === name);
+//   if (filteredArr.length > 0) {
+//     if (isNaN(newArr[3]) === true && isNaN(newArr[5]) === false && isNaN(newArr[7]) === false) {
+//       const obj = DB_Product.getItemByName(name);
+//       const id = obj.id;
+//       const productArr = newArr;
+//       DB_Product.updateItemByNameBlank(name, productArr);
+//       res.redirect(`/products/${id}`);
+//     } else {
+//       const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
+//       const ifProduct = { Product: "Yes", Error: "Input", urlProdObj };
+//       res.render("edit-redirect-one", ifProduct);
+//     }
+//   } else {
+//     const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
+//     const ifProduct = { Product: "Yes", Error: "ID", urlProdObj };
+//     res.render("edit-redirect-two", ifProduct);
+//   }
+// })
 
 Router.get("/products/:id/delete", (req, res) => {
   const { id } = req.params;
@@ -68,6 +92,49 @@ Router.get("/products/:id", (req, res) => {
   const product = DB_Product.getItemById(id);
   res.render("product", product);
 })
+
+Router.get("/products/deleted/:id/restore", (req, res) => {
+  const { id } = req.params;
+  DB_Product.restoreDeletedItem(id);
+  const products = DB_Product.all();
+  const prodObj = { Products: { products } }
+  if (products.length > 0) {
+    res.render("index", prodObj);
+  } else {
+    const ifProduct = { Product: "Yes" };
+    res.render("index", ifProduct);
+  }
+})
+
+Router.get("/products/deleted/:id", (req, res) => {
+  const { id } = req.params;
+  const product = DB_Product.getDeletedItemById(id);
+  res.render("deletedProduct", product);
+})
+
+Router.get("/products/old/:id/:version/restore", (req, res) => {
+  const version = (req.params).id;
+  const id = (req.params).version;
+  const product = DB_Product.getPreviousItemById(id, version);
+  DB_Product.restorePreviousItemVersion(id, product);
+  const products = DB_Product.all();
+  const prodObj = { Products: { products } }
+  if (products.length > 0) {
+    res.render("index", prodObj);
+  } else {
+    const ifProduct = { Product: "Yes" };
+    res.render("index", ifProduct);
+  }
+})
+
+
+Router.get("/products/old/:id/:version", (req, res) => {
+  const version = (req.params).id;
+  const id = (req.params).version;
+  const product = DB_Product.getPreviousItemById(id, version);
+  res.render("previousProduct", product);
+})
+
 
 Router.get("/products/search/:name", (req, res) => {
   const { name } = req.params;
@@ -111,11 +178,13 @@ Router.post("/products", (req, res) => {
 })
 
 Router.put("/products/:id", (req, res) => {
-  const { id } = req.params;
   if (isNaN(((req.body).name)) === true && isNaN(((req.body).price)) === false && isNaN(((req.body).inventory)) === false) {
+    const { id } = req.params;
     const submittedProduct = req.body;
+    const newId = req.body.id
     DB_Product.updateItemById(id, submittedProduct);
-    res.redirect(`/products/${id}`);
+    console.log(DB_Product.old(), "WHYYY GOOOD");
+    res.redirect(`/products/${newId}`);
   } else {
     const { id } = req.params;
     const product = DB_Product.getItemById(id);
@@ -127,7 +196,6 @@ Router.put("/products/:id", (req, res) => {
 Router.delete("/products/:name", (req, res) => {
   const { name } = req.params;
   const allArr = DB_Product.all();
-  const specific = DB_Product.getItemByName(name);
   let filteredArr = allArr.filter(product => product.name === name);
   if (filteredArr.length > 0) {
     if (allArr.length - 1 > 0) {
@@ -136,13 +204,13 @@ Router.delete("/products/:name", (req, res) => {
       const prodObj = { Products: { products } };
       res.render("indexDeleted", prodObj);
     } else {
-      DB_Product.deleteItemById(id);
+      DB_Product.deleteItemByName(name);
       const products = DB_Product.all();
       const ifProduct = { Product: { products } };
       res.render("indexDeleted", ifProduct);
     }
   } else {
-    const ifProduct = { Product: "Yes", Error: "ID", SpecificProduct: specific };
+    const ifProduct = { Product: "Yes", Error: "Name" };
     res.render("delete-redirect", ifProduct);
   }
 })
