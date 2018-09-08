@@ -1,0 +1,70 @@
+{{#with Products}}
+<script>
+  function submissionFunction() {
+    let name = (document.getElementById("productName")).value;
+    var action_src = `/products/search/${name}`;
+    var searchForm = document.getElementById('searchForm');
+    searchForm.action = action_src;
+  }
+</script>
+<h1>Products</h1>
+<br><form id="searchForm" onsubmit="submissionFunction()" method="get">
+  <label> Search Product by Name:
+    <input type="text" name="name" id="productName">
+  </label>
+
+  <input type="submit" value="Submit">
+</form>
+<br>
+<br>
+<br><a href="/products/new">NEW PRODUCT</a>
+<br><a href="/products/delete">DELETE PRODUCT</a>
+<br>
+<br> {{#each products}}
+<div>
+  <a href="/products/{{id}}"> {{name}} </a>
+</div>
+{{/each}}
+<br>
+<br> <a href="/products/old">PREVIOUS PRODUCTS</a>
+<br> <a href="/products/deleted">DELETED PRODUCTS</a>{{/with}} {{#with Articles}}
+<script>
+  function submissionFunction() {
+    let title = (document.getElementById("articleTitle")).value;
+    var action_src = `/articles/${title}`;
+    var searchForm = document.getElementById('searchForm');
+    searchForm.action = action_src;
+  }
+</script>
+<h1>Articles</h1>
+<br><form id="searchForm" onsubmit="submissionFunction()" method="get">
+  <label> Search Article by Title:
+    <input type="text" name="name" id="articleTitle">
+  </label>
+
+  <input type="submit" value="Submit">
+</form>
+<br>
+<br>
+<br><a href="/articles/new">NEW ARTICLE</a>
+<br><a href="/articles/delete">DELETE ARTICLE</a>
+<br>
+<br> {{#each articles}}
+<div>
+  <a href="/articles/{{title}}"> {{title}} </a>
+</div>
+{{/each}}
+<br>
+<br> <a href="/articles/old">PREVIOUS ARTICLES</a>
+<br> <a href="/articles/deleted">DELETED ARTICLES</a>{{/with}} {{#with Product}}
+<h1>Products</h1>
+<a href="/products/new">NEW PRODUCT</a>
+<br>
+<br> <a href="/products/old">PREVIOUS PRODUCTS</a>
+<br> <a href="/products/deleted">DELETED PRODUCTS</a>{{/with}} {{#with Article}}
+<h1>Articles</h1>
+<a href="/articles/new">NEW ARTICLE</a>
+<br>
+<br> <a href="/articles/old">PREVIOUS ARTICLES</a>
+<br> <a href="/articles/deleted">DELETED ARTICLES</a>{{/with}}
+<br> {{> footer}}
