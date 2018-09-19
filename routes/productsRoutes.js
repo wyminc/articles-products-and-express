@@ -20,157 +20,310 @@ Router.get("/products/delete", (req, res) => {
 })
 
 Router.get("/products/deleted", (req, res) => {
-  const products = DB_Product.deleted();
-  const prodObj = { Products: { products } }
-  if (products.length > 0) {
-    res.render("deleted-items", prodObj);
-  } else {
-    const ifProduct = { Product: "Yes" };
-    res.render("deleted-items", ifProduct);
-  }
+  DB_Product.deleted()
+    .then(results => {
+      const products = results.rows;
+      if (products.length > 0) {
+        const prodObj = { Products: { products } }
+        res.render("deleted-items", prodObj);
+      } else {
+        const ifProduct = { Product: "Yes" };
+        res.render("deleted-items", ifProduct);
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/products/old", (req, res) => {
-  const products = DB_Product.old();
-  const prodObj = { Products: { products } }
-  if (products.length > 0) {
-    res.render("previous-items", prodObj);
-  } else {
-    const ifProduct = { Product: "Yes" };
-    res.render("previous-items", ifProduct);
-  }
+  DB_Product.old()
+    .then(results => {
+      const products = results.rows;
+      const prodObj = { Products: { products } }
+      if (products.length > 0) {
+        res.render("previous-items", prodObj);
+      } else {
+        const ifProduct = { Product: "Yes" };
+        res.render("previous-items", ifProduct);
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
-
-// Router.get("/products/blankedit", (req, res) => {
-//   let stringInfo = ((req.url.split("?"))[1]);
-//   let newArr = stringInfo.split("&").join("=").split("=");
-//   const name = newArr[1];
-//   let allArr = DB_Product.all();
-//   let filteredArr = allArr.filter(product => product.name === name);
-//   if (filteredArr.length > 0) {
-//     if (isNaN(newArr[3]) === true && isNaN(newArr[5]) === false && isNaN(newArr[7]) === false) {
-//       const obj = DB_Product.getItemByName(name);
-//       const id = obj.id;
-//       const productArr = newArr;
-//       DB_Product.updateItemByNameBlank(name, productArr);
-//       res.redirect(`/products/${id}`);
-//     } else {
-//       const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
-//       const ifProduct = { Product: "Yes", Error: "Input", urlProdObj };
-//       res.render("edit-redirect-one", ifProduct);
-//     }
-//   } else {
-//     const urlProdObj = { id: newArr[1], name: newArr[3], price: newArr[5], inventory: newArr[7] }
-//     const ifProduct = { Product: "Yes", Error: "ID", urlProdObj };
-//     res.render("edit-redirect-two", ifProduct);
-//   }
-// })
 
 Router.get("/products/:id/delete", (req, res) => {
   const { id } = req.params;
-  DB_Product.deleteItemById(id);
-  const allArr = DB_Product.all();
-  if (allArr.length > 0) {
-    const products = DB_Product.all();
-    const prodObj = { Products: { products } }
-    res.render("indexDeleted", prodObj);
-  } else {
-    const products = DB_Product.all();
-    const ifProduct = { Product: { products } };
-    res.render("indexDeleted", ifProduct);
-  }
+  DB_Product.getItemById(id)
+    .then(results => {
+      info = results.rows[0];
+      DB_Product.insertDeletedItem(info)
+        .then(results => {
+          DB_Product.deleteItemById(id)
+            .then(results => {
+              DB_Product.all()
+                .then(results => {
+                  const allArr = results.rows;
+                  if (allArr.length > 0) {
+                    DB_Product.all()
+                      .then(results => {
+                        const products = results.rows;
+                        const prodObj = { Products: { products } }
+                        res.render("indexDeleted", prodObj);
+                      })
+                      .catch(err => {
+                        console.log('error', err)
+                      })
+                  } else {
+                    DB_Product.all()
+                      .then(results => {
+                        const products = results.rows;
+                        const ifProduct = { Product: { products } };
+                        res.render("indexDeleted", ifProduct);
+                      })
+                      .catch(err => {
+                        console.log('error', err)
+                      })
+                  }
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            })
+            .catch(err => {
+              console.log('error', err)
+            })
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/products/:id/edit", (req, res) => {
   const { id } = req.params;
-  const product = DB_Product.getItemById(id);
-  res.render("edit", { Products: product });
+  DB_Product.getItemById(id)
+    .then(results => {
+      const product = results.rows[0];
+      res.render("edit", { Products: product });
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/products/:id", (req, res) => {
   const { id } = req.params;
-  const product = DB_Product.getItemById(id);
-  res.render("product", product);
+  DB_Product.filterById(id)
+    .then(results => {
+      let filteredArr = results.rows;
+      if (filteredArr.length > 0) {
+        DB_Product.getItemById(id)
+          .then(results => {
+            const product = results.rows[0];
+            res.render("product", product);
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      } else {
+        DB_Product.all()
+          .then(results => {
+            const products = results.rows;
+            const prodObj = { Products: { products } };
+            if (products.length > 0) {
+              res.render("index-redirect", prodObj);
+            } else {
+              const ifProduct = { Product: "Yes" };
+              res.render("index-redirect", ifProduct);
+            }
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/products/deleted/:id/restore", (req, res) => {
   const { id } = req.params;
-  DB_Product.restoreDeletedItem(id);
-  const products = DB_Product.all();
-  const prodObj = { Products: { products } }
-  if (products.length > 0) {
-    res.render("index", prodObj);
-  } else {
-    const ifProduct = { Product: "Yes" };
-    res.render("index", ifProduct);
-  }
+  DB_Product.getDeletedItemById(id)
+    .then(results => {
+      const reference_id = (results.rows[0]).reference_id;
+      DB_Product.restoreDeletedItem(reference_id)
+        .then(results => {
+          DB_Product.deleteFromDeleted(id)
+            .then(results => {
+              DB_Product.all()
+                .then(results => {
+                  const products = results.rows;
+                  const prodObj = { Products: { products } }
+                  if (products.length > 0) {
+                    res.render("index", prodObj);
+                  } else {
+                    const ifProduct = { Product: "Yes" };
+                    res.render("index", ifProduct);
+                  }
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            })
+            .catch(err => {
+              console.log('error', err)
+            })
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/products/deleted/:id", (req, res) => {
   const { id } = req.params;
-  const product = DB_Product.getDeletedItemById(id);
-  res.render("deletedProduct", product);
+  DB_Product.getDeletedItemById(id)
+    .then(results => {
+      const product = results.rows[0];
+      res.render("deletedProduct", product);
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/products/old/:id/:version/restore", (req, res) => {
-  const version = (req.params).id;
-  const id = (req.params).version;
-  const product = DB_Product.getPreviousItemById(id, version);
-  DB_Product.restorePreviousItemVersion(id, product);
-  const products = DB_Product.all();
-  const prodObj = { Products: { products } }
-  if (products.length > 0) {
-    res.render("index", prodObj);
-  } else {
-    const ifProduct = { Product: "Yes" };
-    res.render("index", ifProduct);
-  }
-})
+  const id = (req.params).id;
+  const version = (req.params).version;
+  DB_Product.getItemById(id)
+    .then(results => {
+      const info = results.rows[0];
+      DB_Product.insertOldItem(info)
+        .then(results => {
+          DB_Product.getPreviousItemById(id, version)
+            .then(results => {
+              const product = results.rows[0];
+              DB_Product.restorePreviousItem(id, product)
+                .then(results => {
+                  DB_Product.all()
+                    .then(results => {
+                      const products = results.rows;
+                      const prodObj = { Products: { products } }
+                      if (products.length > 0) {
+                        res.render("index", prodObj);
+                      } else {
+                        const ifProduct = { Product: "Yes" };
+                        res.render("index", ifProduct);
+                      }
+                    })
+                    .catch(err => {
+                      console.log('error', err)
+                    })
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            })
+            .catch(err => {
+              console.log('error', err)
+            })
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
 
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
+
+})
 
 Router.get("/products/old/:id/:version", (req, res) => {
-  const version = (req.params).id;
-  const id = (req.params).version;
-  const product = DB_Product.getPreviousItemById(id, version);
-  res.render("previousProduct", product);
+  const id = (req.params).id;
+  const version = (req.params).version;
+  DB_Product.getPreviousItemById(id, version)
+    .then(results => {
+      const product = results.rows[0];
+      res.render("previousProduct", product);
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
-
 
 Router.get("/products/search/:name", (req, res) => {
   const { name } = req.params;
-  let allArr = DB_Product.all();
-  let filteredArr = allArr.filter(product => product.name === name);
-  if (filteredArr.length > 0) {
-    const product = DB_Product.getItemByName(name);
-    res.render("product", product);
-  } else {
-    const products = DB_Product.all();
-    const prodObj = { Products: { products } }
-    if (products.length > 0) {
-      res.render("index-redirect", prodObj);
-    } else {
-      const ifProduct = { Product: "Yes" };
-      res.render("index-redirect", ifProduct);
-    }
-  }
+  DB_Product.filterByName(name)
+    .then(results => {
+      let filteredArr = results.rows;
+      if (filteredArr.length > 0) {
+        DB_Product.getItemByName(name)
+          .then(results => {
+            const product = results.rows[0];
+            res.render("product", product);
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      } else {
+        DB_Product.all()
+          .then(results => {
+            products = results.rows
+            if (products.length > 0) {
+              const prodObj = { Products: { products } }
+              res.render("index-redirect", prodObj);
+            } else {
+              const ifProduct = { Product: "Yes" };
+              res.render("index-redirect", ifProduct);
+            }
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/products", (req, res) => {
-  const products = DB_Product.all();
-  const prodObj = { Products: { products } }
-  if (products.length > 0) {
-    res.render("index", prodObj);
-  } else {
-    const ifProduct = { Product: "Yes" };
-    res.render("index", ifProduct);
-  }
+  DB_Product.all()
+    .then(results => {
+      const products = results.rows;
+      const prodObj = { Products: { products } }
+      if (products.length > 0) {
+        res.render("index", prodObj);
+      } else {
+        const ifProduct = { Product: "Yes" };
+        res.render("index", ifProduct);
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.post("/products", (req, res) => {
-  if (isNaN(((req.body).name)) === true && isNaN(((req.body).price)) === false && isNaN(((req.body).inventory)) === false) {
+  if (DB_Product.ifChecker(req.body) === true) {
     const submittedProduct = req.body;
-    DB_Product.add(submittedProduct);
-    res.redirect("/products");
+    DB_Product.add(submittedProduct)
+      .then(results => {
+        res.redirect("/products");
+      })
+      .catch(err => {
+        console.log('error', err)
+      })
   } else {
     const ifProduct = { Product: "Yes" };
     res.render("new-redirect", ifProduct);
@@ -178,41 +331,124 @@ Router.post("/products", (req, res) => {
 })
 
 Router.put("/products/:id", (req, res) => {
-  if (isNaN(((req.body).name)) === true && isNaN(((req.body).price)) === false && isNaN(((req.body).inventory)) === false) {
+  if (DB_Product.ifChecker(req.body) === true) {
     const { id } = req.params;
     const submittedProduct = req.body;
-    const newId = req.body.id
-    DB_Product.updateItemById(id, submittedProduct);
-    console.log(DB_Product.old(), "WHYYY GOOOD");
-    res.redirect(`/products/${newId}`);
+    DB_Product.getItemById(id)
+      .then(results => {
+        info = results.rows[0];
+        DB_Product.insertOldItem(info)
+          .then(results => {
+            DB_Product.updateItemById(id, submittedProduct)
+              .then(results => {
+                res.redirect(`/products/${id}`);
+              })
+              .catch(err => {
+                console.log('error', err)
+              })
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      })
+      .catch(err => {
+        console.log('error', err)
+      })
   } else {
     const { id } = req.params;
-    const product = DB_Product.getItemById(id);
-    const ifProduct = { Product: "Yes", Error: "Input", product };
-    res.render("edit-redirect-one", ifProduct);
+    DB_Product.getItemById(id)
+      .then(results => {
+        product = results.rows[0];
+        const ifProduct = { Product: "Yes", Error: "Input", product };
+        res.render("edit-redirect-one", ifProduct);
+      })
+      .catch(err => {
+        console.log('error', err)
+      })
   }
 })
 
 Router.delete("/products/:name", (req, res) => {
   const { name } = req.params;
-  const allArr = DB_Product.all();
-  let filteredArr = allArr.filter(product => product.name === name);
-  if (filteredArr.length > 0) {
-    if (allArr.length - 1 > 0) {
-      DB_Product.deleteItemByName(name);
-      const products = DB_Product.all();
-      const prodObj = { Products: { products } };
-      res.render("indexDeleted", prodObj);
-    } else {
-      DB_Product.deleteItemByName(name);
-      const products = DB_Product.all();
-      const ifProduct = { Product: { products } };
-      res.render("indexDeleted", ifProduct);
-    }
-  } else {
-    const ifProduct = { Product: "Yes", Error: "Name" };
-    res.render("delete-redirect", ifProduct);
-  }
+  DB_Product.all()
+    .then(results => {
+      allArr = results.rows;
+      DB_Product.filterByName(name)
+        .then(results => {
+          let filteredArr = results.rows;
+          if (filteredArr.length > 0) {
+            if (allArr.length - 1 > 0) {
+              DB_Product.getItemByName(name)
+                .then(results => {
+                  info = results.rows[0];
+                  DB_Product.insertDeletedItem(info)
+                    .then(results => {
+                      DB_Product.deleteItemByName(name)
+                        .then(results => {
+                          DB_Product.all()
+                            .then(results => {
+                              products = results.rows;
+                              const prodObj = { Products: { products } };
+                              res.render("indexDeleted", prodObj);
+                            })
+                            .catch(err => {
+                              console.log('error', err)
+                            })
+                        })
+                        .catch(err => {
+                          console.log('error', err)
+                        })
+                    })
+                    .catch(err => {
+                      console.log('error', err)
+                    })
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            } else {
+              DB_Product.getItemByName(name)
+                .then(results => {
+                  let info = results.rows[0];
+                  DB_Product.insertDeletedItem(info)
+                    .then(results => {
+                      info = results.rows[0];
+                      DB_Product.deleteItemByName(name)
+                        .then(results => {
+                          DB_Product.all()
+                            .then(results => {
+                              const products = results.rows;
+                              const ifProduct = { Product: { products } };
+                              res.render("indexDeleted", ifProduct);
+                            })
+                            .catch(err => {
+                              console.log('error', err)
+                            })
+                        })
+                        .catch(err => {
+                          console.log('error', err)
+                        })
+                    })
+                    .catch(err => {
+                      console.log('error', err)
+                    })
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            }
+          } else {
+            const ifProduct = { Product: "Yes", Error: "Name" };
+            res.render("delete-redirect", ifProduct);
+          }
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 module.exports = Router;

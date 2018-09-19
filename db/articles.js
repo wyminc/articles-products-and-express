@@ -1,176 +1,90 @@
 class Articles {
   constructor() {
-    this._storage = [];
-    this._oldStorage = [];
-    this._deletedStorage = [];
+    this.knex = require('../knex/knex.js');
+  }
+
+  ifChecker(requestBody) {
+    if (isNaN(((requestBody).title)) === true) {
+      if (isNaN(((requestBody).body)) === true) {
+        if (isNaN(((requestBody).author)) === true) {
+          return true;
+        } else {
+          return false
+        }
+      } else {
+        return false
+      }
+    } else {
+      return false
+    }
+  }
+
+  filter(title) {
+    return this.knex.raw(`SELECT * FROM articles WHERE title = '${title}'`);
   }
 
   all() {
-    return this._storage.filter(article => article.delete !== true);
+    return this.knex.raw('SELECT * FROM articles WHERE is_deleted = false ORDER BY id');
   }
 
   old() {
-    let usedStorage = [...this._oldStorage];
-    usedStorage.sort(function (a, b) {
-      var nameA = a.name.toUpperCase();
-      var nameB = b.name.toUpperCase();
-      if (nameA < nameB) {
-        return -1;
-      } else if (nameA > nameB) {
-        return 1;
-      } else {
-        return 0;
-      }
-    })
-    usedStorage.sort(function (a, b) {
-      return a.version - b.version;
-    })
-    return usedStorage;
+    return this.knex.raw('SELECT * FROM old_articles ORDER BY reference_id, title, version')
   }
 
   deleted() {
-    let usedStorage = [... this._deletedStorage];
-    usedStorage.sort(function (a, b) {
-      var nameA = a.name.toUpperCase();
-      var nameB = b.name.toUpperCase();
-      if (nameA < nameB) {
-        return -1;
-      } else if (nameA > nameB) {
-        return 1;
-      } else {
-        return 0;
-      }
-    })
-    usedStorage.sort(function (a, b) {
-      return a.version - b.version;
-    })
-    return usedStorage;
+    return this.knex.raw('SELECT * FROM deleted_articles ORDER BY reference_id, title, version')
   }
 
   getItemByTitle(title) {
-    let returnArr = this._storage.filter((article) => title == article.title);
-    return returnArr.filter(article => article.delete !== true)[0];
+    return this.knex.raw(`SELECT id, title, body, author, version, is_deleted, TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at, TO_CHAR(updated_at,'YYYY-MM-DD HH24:MI:SS') AS updated_at  FROM articles WHERE title = '${title}' and is_deleted = false`);
   }
 
   getItemById(id) {
-    let returnArr = this._storage.filter((article) => parseInt(id) === parseInt(article.id));
-    return returnArr.filter(article => article.delete !== true)[0];
+    return this.knex.raw(`SELECT id, title, body, author, version, is_deleted, TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at, TO_CHAR(updated_at,'YYYY-MM-DD HH24:MI:SS') AS updated_at  FROM articles WHERE id = '${id}' and is_deleted = false`);
   }
 
   add(article) {
-    article.id = ((this._storage).length + 1);
-    article.version = 1;
-    article.delete = false;
-    this._storage.push(article);
-    return article.title;
+    return this.knex.raw(`INSERT INTO articles (title, body, author) VALUES ('${article.title}','${article.body}', '${article.author}')`)
   }
 
-  // updateItemByTitleBlank(title, arr) {
-  //   let returnArr = this._storage.filter((article) => title === article.title);
-  //   let filteredArr = returnArr.filter(article => article.delete !== true)[0];
-  //   let filteredArrIndex = this._storage.indexOf(filteredArr);
-  //   this._oldStorage.push(this._storage[filteredArrIndex]);
-  //   this._storage[filteredArrIndex].title = arr[1];
-  //   this._storage[filteredArrIndex].body = arr[3];
-  //   this._storage[filteredArrIndex].author = arr[5];
-
-  //   let filteredOldArr = this._oldStorage.filter((article) => title === article.title);
-  //   let fiteredOldReverseArr = (filteredOldArr.reverse())[0];
-  //   let filteredOldArrIndex = this._storage.indexOf(fiteredOldReverseArr);
-
-  //   (this._storage[filteredArrIndex]).version = (this._oldStorage[filteredOldArrIndex]).version + 1;
-  // }
-
-  // updateItemByTitle(title, id, info) {
-  //   let filteredArr = this._storage.filter((article) => filterTitle === article.title)[0];
-  //   let filteredArrIndex = this._storage.indexOf(filteredArr);
-  //   this._oldStorage.push(filteredArr);
-
-
-  //   let filteredOldArr = this._oldStorage.filter((oldArticle) => filterTitle === oldArticle.title);
-  //   let fiteredOldReverseArr = (filteredOldArr.reverse())[0];
-  //   let filteredOldArrIndex = this._storage.indexOf(fiteredOldReverseArr);
-
-  //   let newInfo = info;
-
-  //   newInfo.delete = false;
-  //   newInfo.id = id;
-  //   newInfo.version = (this._oldStorage[filteredOldArrIndex]).version + 1;
-
-  //   this._storage.splice(filteredArrIndex, 1, newInfo);
-  // }
-
   updateItemById(id, info) {
-    const filteredArr = this._storage.filter((article) => parseInt(id) === parseInt(article.id))[0];
-    const filteredArrIndex = this._storage.indexOf(filteredArr);
-    this._oldStorage.push(filteredArr);
+    return this.knex.raw(`UPDATE articles SET title = '${info.title}', body = '${info.body}', author = '${info.author}', version = version + 1, updated_at = now() WHERE id = '${id}'`);
+  }
 
-    const filteredOldArr = this._oldStorage.filter((article) => parseInt(id) === parseInt(article.id));
-    const filteredOldReverseArr = (filteredOldArr.reverse())[0];
-    const filteredOldArrIndex = this._storage.indexOf(filteredOldReverseArr);
-
-    let newInfo = info;
-
-    newInfo.delete = false;
-    newInfo.id = id
-    newInfo.version = (this._oldStorage[filteredOldArrIndex]).version + 1;
-
-    this._storage.splice(filteredArrIndex, 1, newInfo);
+  insertOldItem(info) {
+    return this.knex.raw(`INSERT INTO old_articles (reference_id, title, body, author, version, is_deleted, reference_created_at, reference_updated_at) VALUES ('${info.id}', '${info.title}', '${info.body}', '${info.author}', '${info.version}', '${info.is_deleted}', TO_TIMESTAMP('${info.created_at}', 'YYYY-MM-DD HH24:MI:SS'), TO_TIMESTAMP('${info.updated_at}', 'YYYY-MM-DD HH24:MI:SS'))`);
   }
 
   deleteItemByTitle(title) {
-    let returnArr = this._storage.filter((article) => title === article.title);
-    let filteredArr = returnArr.filter(article => article.delete !== true)[0];
-    let filteredArrIndex = this._storage.indexOf(filteredArr);
-    this._deletedStorage.splice(filteredArrIndex, 1, this._storage[filteredArrIndex]);
-    (this._storage[filteredArrIndex]).delete = true;
-    return this._storage.filter(article => article.delete !== true);
+    return this.knex.raw(`UPDATE articles SET is_deleted = true WHERE title = '${title}'`);
   }
 
-  // getDeletedItemByTitle(title) {
-  //   return this._deletedStorage.filter((article) => title === article.title)[0];
-  // }
-
-  // getPreviousItemByTitle(title, version) {
-  //   let returnArr = this._oldStorage.filter((article) => title === article.title);
-  //   return returnArr.filter(article => parseInt(version) === parseInt(article.version))[0];
-  // }
+  insertDeletedItem(info) {
+    return this.knex.raw(`INSERT INTO deleted_articles (reference_id, title, body, author, version, reference_created_at, reference_updated_at) VALUES ('${info.id}', '${info.title}', '${info.body}', '${info.author}', '${info.version}', TO_TIMESTAMP('${info.created_at}', 'YYYY-MM-DD HH24:MI:SS'), TO_TIMESTAMP('${info.updated_at}', 'YYYY-MM-DD HH24:MI:SS'))`);
+  }
 
   getDeletedItemById(id) {
-    return this._deletedStorage.filter((article) => parseInt(id) === parseInt(article.id))[0];
+    return this.knex.raw(`SELECT id, reference_id, title, body, author, version, TO_CHAR(reference_created_at, 'YYYY-MM-DD HH24:MI:SS') AS reference_created_at, TO_CHAR(reference_updated_at,'YYYY-MM-DD HH24:MI:SS') AS reference_updated_at, created_at, updated_at  FROM deleted_articles WHERE id = '${id}'`)
   }
 
   getPreviousItemById(id, version) {
-    let returnArr = this._oldStorage.filter((article) => parseInt(id) === parseInt(article.id));
-    return returnArr.filter(article => parseInt(version) === parseInt(article.version))[0];
+    return this.knex.raw(`SELECT id, reference_id, title, body, author, version, is_deleted, TO_CHAR(reference_created_at, 'YYYY-MM-DD HH24:MI:SS') AS reference_created_at, TO_CHAR(reference_updated_at,'YYYY-MM-DD HH24:MI:SS') AS reference_updated_at, created_at, updated_at  FROM old_articles WHERE id = '${id}' and version = '${version}'`)
   }
 
-  restorePreviousItemVersion(id, info) {
-    const returnArr = this._storage.filter((article) => parseInt(id) === parseInt(article.id));
-    const filteredArr = returnArr.filter(article => article.delete !== true)[0];
-    const filteredArrIndex = this._storage.indexOf(filteredArr);
-
-    const filteredOldArr = this._oldStorage.filter((article) => parseInt(id) === parseInt(article.id));
-    const filteredOldArrValue = filteredOldArr.filter(article => parseInt(article.version) === parseInt(info.version))[0]
-    const filteredOldArrIndex = this._oldStorage.indexOf(filteredOldArrValue);
-
-    let newInfo = info;
-
-    this._oldStorage.push(filteredArr);
-    this._oldStorage.splice(filteredOldArrIndex, 1);
-    this._storage.splice(filteredArrIndex, 1, newInfo);
+  restorePreviousItem(id, info) {
+    return this.knex.raw(`UPDATE articles SET id = '${info.reference_id}', title = '${info.title}', body = '${info.body}', author = '${info.author}', version = '${info.version}', is_deleted = ${info.is_deleted}, created_at = TO_TIMESTAMP('${info.reference_created_at}', 'YYYY-MM-DD HH24:MI:SS'), updated_at = TO_TIMESTAMP('${info.reference_updated_at}', 'YYYY-MM-DD HH24:MI:SS') WHERE id = '${info.reference_id}'`);
   }
 
   restoreDeletedItem(id) {
-    let returnArr = this._storage.filter((article) => parseInt(id) === parseInt(article.id));
-    let filteredArr = returnArr.filter(article => article.delete === true)[0];
-    let filteredArrIndex = this._storage.indexOf(filteredArr);
-    this._storage[filteredArrIndex].delete = false;
+    return this.knex.raw(`UPDATE articles SET is_deleted = false WHERE id = '${id}'`);
+  }
 
-    const filteredDelArr = this._deletedStorage.filter((article) => parseInt(id) === parseInt(article.id))[0];
-    const filteredDelArrIndex = this._deletedStorage.indexOf(filteredDelArr);
+  deleteFromOld(id) {
+    return this.knex.raw(`DELETE FROM old_articles where id = '${id}'`)
+  }
 
-    this._deletedStorage.splice(filteredDelArrIndex, 1);
+  deleteFromDeleted(id) {
+    return this.knex.raw(`DELETE FROM deleted_articles where id = '${id}'`)
   }
 }
 

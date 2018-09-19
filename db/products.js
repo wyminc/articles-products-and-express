@@ -1,147 +1,102 @@
 class Products {
   constructor() {
+    this.knex = require('../knex/knex.js');
     this._storage = [];
     this._oldStorage = [];
     this._deletedStorage = [];
   }
 
+  ifChecker(requestBody) {
+    if (isNaN(((requestBody).name)) === true) {
+      if (isNaN(((requestBody).price)) === false) {
+        if (isNaN(((requestBody).inventory)) === false) {
+          return true;
+        } else {
+          return false
+        }
+      } else {
+        return false
+      }
+    } else {
+      return false
+    }
+  }
+
+  filterById(id) {
+    return this.knex.raw(`SELECT * FROM products WHERE id = '${id}'`);
+  }
+
+  filterByName(name) {
+    return this.knex.raw(`SELECT * FROM products WHERE name = '${name}'`);
+  }
+
   all() {
-    return this._storage.filter(product => product.delete !== true);
+    return this.knex.raw('SELECT * FROM products WHERE is_deleted = false ORDER BY id');
   }
 
   old() {
-    let usedStorage = [...this._oldStorage];
-    usedStorage.sort(function (a, b) {
-      return a.id - b.id;
-    })
-    usedStorage.sort(function (a, b) {
-      return a.version - b.version;
-    })
-    return usedStorage;
+    return this.knex.raw('SELECT * FROM old_products ORDER BY reference_id, name, version')
   }
+
 
   deleted() {
-    let usedStorage = [... this._deletedStorage];
-    usedStorage.sort(function (a, b) {
-      var nameA = a.name.toUpperCase();
-      var nameB = b.name.toUpperCase();
-      if (nameA < nameB) {
-        return -1;
-      } else if (nameA > nameB) {
-        return 1;
-      } else {
-        return 0;
-      }
-    })
-    usedStorage.sort(function (a, b) {
-      return a.version - b.version;
-    })
-    return usedStorage;
-  }
-
-  getItemById(id) {
-    let returnArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id));
-    return returnArr.filter(product => product.delete !== true)[0];
+    return this.knex.raw('SELECT * FROM deleted_products ORDER BY reference_id, name, version')
   }
 
   getItemByName(name) {
-    return this._storage.filter((product) => name === product.name)[0];
+    return this.knex.raw(`SELECT id, name, price, inventory, version, is_deleted, TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at, TO_CHAR(updated_at,'YYYY-MM-DD HH24:MI:SS') AS updated_at  FROM products WHERE name = '${name}' and is_deleted = false`);
+  }
+
+  getItemById(id) {
+    return this.knex.raw(`SELECT id, name, price, inventory, version, is_deleted, TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at, TO_CHAR(updated_at,'YYYY-MM-DD HH24:MI:SS') AS updated_at  FROM products WHERE id = '${id}' and is_deleted = false`);
   }
 
   add(product) {
-    product.id = ((this._storage).length + 1);
-    product.version = 1;
-    product.delete = false;
-    this._storage.push(product);
-    return product.id;
+    return this.knex.raw(`INSERT INTO products (name, price, inventory) VALUES ('${product.name}','${product.price}', '${product.inventory}')`)
   }
 
-  // updateItemByNameBlank(name, arr) {
-  //   let returnArr = this._storage.filter((product) => name === product.name);
-  //   let filteredArr = returnArr.filter(product => product.delete !== true)[0];
-  //   let filteredArrIndex = this._storage.indexOf(filteredArr);
-  //   this._oldStorage.push(this._storage[filteredArrIndex]);
-  //   this._storage[filteredArrIndex].name = arr[1];
-  //   this._storage[filteredArrIndex].price = arr[3];
-  //   this._storage[filteredArrIndex].inventory = arr[5];
-
-  //   let filteredOldArr = this._oldStorage.filter((product) => name === product.name);
-  //   let fiteredOldReverseArr = (filteredOldArr.reverse())[0];
-  //   let filteredOldArrIndex = this._storage.indexOf(fiteredOldReverseArr);
-
-  //   (this._storage[filteredArrIndex]).version = (this._oldStorage[filteredOldArrIndex]).version + 1;
-  // }
-
   updateItemById(id, info) {
-    const filteredArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id))[0];
-    const filteredArrIndex = this._storage.indexOf(filteredArr);
-    this._oldStorage.push(filteredArr);
+    return this.knex.raw(`UPDATE products SET name = '${info.name}', price = '${info.price}', inventory = '${info.inventory}', version = version + 1, updated_at = now() WHERE id = '${id}'`);
+  }
 
-    const filteredOldArr = this._oldStorage.filter((product) => parseInt(id) === parseInt(product.id));
-    const filteredOldReverseArr = (filteredOldArr.reverse())[0];
-    const filteredOldArrIndex = this._storage.indexOf(filteredOldReverseArr);
-
-    let newInfo = info;
-
-    newInfo.delete = false;
-    newInfo.id = id
-    newInfo.version = (this._oldStorage[filteredOldArrIndex]).version + 1;
-
-    this._storage.splice(filteredArrIndex, 1, newInfo);
+  insertOldItem(info) {
+    return this.knex.raw(`INSERT INTO old_products (reference_id, name, price, inventory, version, is_deleted, reference_created_at, reference_updated_at) VALUES ('${info.id}', '${info.name}', '${info.price}', '${info.inventory}', '${info.version}', '${info.is_deleted}', TO_TIMESTAMP('${info.created_at}', 'YYYY-MM-DD HH24:MI:SS'), TO_TIMESTAMP('${info.updated_at}', 'YYYY-MM-DD HH24:MI:SS'))`);
   }
 
   deleteItemById(id) {
-    let filteredArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id))[0];
-    let filteredArrIndex = this._storage.indexOf(filteredArr);
-    this._deletedStorage.push(this._storage[filteredArrIndex]);
-    (this._storage[filteredArrIndex]).delete = true;
-    return this._storage.filter(product => product.delete !== true);
+    return this.knex.raw(`UPDATE products SET is_deleted = true WHERE id = '${id}'`);
+  }
+
+  insertDeletedItem(info) {
+    return this.knex.raw(`INSERT INTO deleted_products (reference_id, name, price, inventory, version, reference_created_at, reference_updated_at) VALUES ('${info.id}', '${info.name}', '${info.price}', '${info.inventory}', '${info.version}', TO_TIMESTAMP('${info.created_at}', 'YYYY-MM-DD HH24:MI:SS'), TO_TIMESTAMP('${info.updated_at}', 'YYYY-MM-DD HH24:MI:SS'))`);
   }
 
   deleteItemByName(name) {
-    let returnArr = this._storage.filter((product) => name === product.name);
-    let filteredArr = returnArr.filter(product => product.delete !== true)[0];
-    let filteredArrIndex = this._storage.indexOf(filteredArr);
-    this._deletedStorage.splice(filteredArrIndex, 1, this._storage[filteredArrIndex]);
-    (this._storage[filteredArrIndex]).delete = true;
-    return this._storage.filter(product => product.delete !== true);
+    return this.knex.raw(`UPDATE products SET is_deleted = true WHERE name = '${name}'`);
   }
 
   getDeletedItemById(id) {
-    return this._deletedStorage.filter((product) => parseInt(id) === parseInt(product.id))[0];
+    return this.knex.raw(`SELECT id, reference_id, name, price, inventory, version, TO_CHAR(reference_created_at, 'YYYY-MM-DD HH24:MI:SS') AS reference_created_at, TO_CHAR(reference_updated_at,'YYYY-MM-DD HH24:MI:SS') AS reference_updated_at, created_at, updated_at  FROM deleted_products WHERE id = '${id}'`)
   }
 
   getPreviousItemById(id, version) {
-    let returnArr = this._oldStorage.filter((product) => parseInt(id) === parseInt(product.id));
-    return returnArr.filter(product => parseInt(version) === parseInt(product.version))[0];
+    return this.knex.raw(`SELECT id, reference_id, name, price, inventory, version, is_deleted, TO_CHAR(reference_created_at, 'YYYY-MM-DD HH24:MI:SS') AS reference_created_at, TO_CHAR(reference_updated_at,'YYYY-MM-DD HH24:MI:SS') AS reference_updated_at, created_at, updated_at  FROM old_products WHERE id = '${id}' and version = '${version}'`)
   }
 
-  restorePreviousItemVersion(id, info) {
-    const returnArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id));
-    const filteredArr = returnArr.filter(product => product.delete !== true)[0];
-    const filteredArrIndex = this._storage.indexOf(filteredArr);
-
-    const filteredOldArr = this._oldStorage.filter((product) => parseInt(id) === parseInt(product.id));
-    const filteredOldArrValue = filteredOldArr.filter(product => parseInt(product.version) === parseInt(info.version))[0]
-    const filteredOldArrIndex = this._oldStorage.indexOf(filteredOldArrValue);
-
-    let newInfo = info;
-
-    this._oldStorage.push(filteredArr);
-    this._oldStorage.splice(filteredOldArrIndex, 1);
-    this._storage.splice(filteredArrIndex, 1, newInfo);
+  restorePreviousItem(id, info) {
+    return this.knex.raw(`UPDATE products SET id = '${info.reference_id}', name = '${info.name}', price = '${info.price}', inventory = '${info.inventory}', version = '${info.version}', is_deleted = ${info.is_deleted}, created_at = TO_TIMESTAMP('${info.reference_created_at}', 'YYYY-MM-DD HH24:MI:SS'), updated_at = TO_TIMESTAMP('${info.reference_updated_at}', 'YYYY-MM-DD HH24:MI:SS') WHERE id = '${info.reference_id}'`);
   }
 
   restoreDeletedItem(id) {
-    let returnArr = this._storage.filter((product) => parseInt(id) === parseInt(product.id));
-    let filteredArr = returnArr.filter(product => product.delete === true)[0];
-    let filteredArrIndex = this._storage.indexOf(filteredArr);
-    this._storage[filteredArrIndex].delete = false;
+    return this.knex.raw(`UPDATE products SET is_deleted = false WHERE id = '${id}'`);
+  }
 
-    const filteredDelArr = this._deletedStorage.filter((product) => parseInt(id) === parseInt(product.id))[0];
-    const filteredDelArrIndex = this._deletedStorage.indexOf(filteredDelArr);
+  deleteFromOld(id) {
+    return this.knex.raw(`DELETE FROM old_products where id = '${id}'`)
+  }
 
-    this._deletedStorage.splice(filteredDelArrIndex, 1);
+  deleteFromDeleted(id) {
+    return this.knex.raw(`DELETE FROM deleted_products where id = '${id}'`)
   }
 }
 

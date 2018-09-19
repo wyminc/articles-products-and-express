@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "migrate": "POSTGRES_HOSTNAME=localhost POSTGRES_CONTAINER_PORT=1818 npx knex migrate:latest",
+    "seed": "POSTGRES_HOSTNAME=localhost POSTGRES_CONTAINER_PORT=1818 npx knex seed:run"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,9 @@
     "supertest": "^3.1.0"
   },
   "dependencies": {
-    "method-override": "^3.0.0"
+    "dotenv": "^6.0.0",
+    "knex": "^0.15.2",
+    "method-override": "^3.0.0",
+    "pg": "^7.4.3"
   }
 }

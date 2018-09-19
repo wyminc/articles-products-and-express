@@ -3,11 +3,12 @@ const methodOverride = require("method-override")
 const app = express();
 const bp = require("body-parser");
 const exphbs = require("express-handlebars");
+const knex = require('./knex/knex.js')
 
 const productsRoutes = require('./routes/productsRoutes.js');
 const articlesRoutes = require('./routes/articlesRoutes.js');
 
-const PORT = process.env.PORT;
+const PORT = process.env.EXPRESS_CONTAINER_PORT;
 
 app.use(methodOverride("_method"))
 

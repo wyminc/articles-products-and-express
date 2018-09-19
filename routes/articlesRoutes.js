@@ -20,147 +20,272 @@ Router.get("/articles/delete", (req, res) => {
 })
 
 Router.get("/articles/deleted", (req, res) => {
-  const articles = DB_Article.deleted();
-  const artObj = { Articles: { articles } }
-  if (articles.length > 0) {
-    res.render("deleted-items", artObj);
-  } else {
-    const ifArticle = { Article: "Yes" };
-    res.render("deleted-items", ifArticle);
-  }
+  DB_Article.deleted()
+    .then(results => {
+      const articles = results.rows;
+      if (articles.length > 0) {
+        const artObj = { Articles: { articles } }
+        res.render("deleted-items", artObj);
+      } else {
+        const ifArticle = { Article: "Yes" };
+        res.render("deleted-items", ifArticle);
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles/old", (req, res) => {
-  const articles = DB_Article.old();
-  const artObj = { Articles: { articles } }
-  if (articles.length > 0) {
-    res.render("previous-items", artObj);
-  } else {
-    const ifArticle = { Article: "Yes" };
-    res.render("previous-items", ifArticle);
-  }
+  DB_Article.old()
+    .then(results => {
+      const articles = results.rows;
+      const artObj = { Articles: { articles } };
+      if (articles.length > 0) {
+        res.render("previous-items", artObj);
+      } else {
+        const ifArticle = { Article: "Yes" };
+        res.render("previous-items", ifArticle);
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
-
-// Router.get("/articles/blankedit", (req, res) => {
-//   let stringInfo = ((req.url.split("?"))[1]);
-//   let newArr = stringInfo.split("&").join("=").split("=");
-//   const title = newArr[1];
-//   let allArr = DB_Article.all();
-//   let filteredArr = allArr.filter(article => title === article.title);
-//   if (filteredArr.length > 0) {
-//     if (isNaN(newArr[1]) === true && isNaN(newArr[3]) === true && isNaN(newArr[5]) === true) {
-//       const articleArr = newArr;
-//       DB_Article.updateItemByTitleBlank(title, articleArr);
-//       res.redirect(`/articles/${title}`);
-//     } else {
-//       const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
-//       const ifArticle = { Article: "Yes", Error: "Input", urlArtObj };
-//       res.render("edit-redirect-one", ifArticle);
-//     }
-//   } else {
-//     const urlArtObj = { title: newArr[1], body: newArr[3], author: newArr[5] }
-//     const ifArticle = { Article: "Yes", Error: "Title", urlArtObj };
-//     res.render("edit-redirect-two", ifArticle);
-//   }
-// })
 
 Router.get("/articles/:title/delete", (req, res) => {
   const { title } = req.params;
-  DB_Article.deleteItemByTitle(title);
-  const allArr = DB_Article.all();
-  if (allArr.length > 0) {
-    const articles = DB_Article.all();
-    const artObj = { Articles: { articles } }
-    res.render("indexDeleted", artObj);
-  } else {
-    const articles = DB_Article.all();
-    const ifArticle = { Article: { articles } };
-    res.render("indexDeleted", ifArticle);
-  }
+  DB_Article.getItemByTitle(title)
+    .then(results => {
+      info = results.rows[0];
+      DB_Article.insertDeletedItem(info)
+        .then(results => {
+          DB_Article.deleteItemByTitle(title)
+            .then(results => {
+              DB_Article.all()
+                .then(results => {
+                  const allArr = results.rows;
+                  if (allArr.length > 0) {
+                    DB_Article.all()
+                      .then(results => {
+                        const articles = results.rows;
+                        const artObj = { Articles: { articles } }
+                        res.render("indexDeleted", artObj);
+                      })
+                      .catch(err => {
+                        console.log('error', err)
+                      })
+                  } else {
+                    DB_Article.all()
+                      .then(results => {
+                        const articles = results.rows;
+                        const ifArticle = { Article: { articles } };
+                        res.render("indexDeleted", ifArticle);
+                      })
+                      .catch(err => {
+                        console.log('error', err)
+                      })
+                  }
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            })
+            .catch(err => {
+              console.log('error', err)
+            })
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles/:title/edit", (req, res) => {
   const { title } = req.params;
-  const article = DB_Article.getItemByTitle(title);
-  res.render("edit", { Articles: article });
+  DB_Article.getItemByTitle(title)
+    .then(results => {
+      const article = results.rows[0];
+      res.render("edit", { Articles: article });
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles/:title", (req, res) => {
   const { title } = req.params;
-  let allArr = DB_Article.all();
-  let filteredArr = allArr.filter(article => article.title === title);
-  if (filteredArr.length > 0) {
-    const article = DB_Article.getItemByTitle(title);
-    res.render("article", article);
-  } else {
-    const articles = DB_Article.all();
-    const artObj = { Articles: { articles } }
-    if (articles.length > 0) {
-      res.render("index-redirect", artObj);
-    } else {
-      const ifArticle = { Article: "Yes" };
-      res.render("index-redirect", ifArticle);
-    }
-  }
+  DB_Article.filter(title)
+    .then(results => {
+      let filteredArr = results.rows;
+      if (filteredArr.length > 0) {
+        DB_Article.getItemByTitle(title)
+          .then(results => {
+            const article = results.rows[0];
+            res.render("article", article);
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      } else {
+        DB_Article.all()
+          .then(results => {
+            const articles = results.rows;
+            const artObj = { Articles: { articles } };
+            if (articles.length > 0) {
+              res.render("index-redirect", artObj);
+            } else {
+              const ifArticle = { Article: "Yes" };
+              res.render("index-redirect", ifArticle);
+            }
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles/deleted/:id/restore", (req, res) => {
   const { id } = req.params;
-  DB_Article.restoreDeletedItem(id);
-  const articles = DB_Article.all();
-  const artObj = { Articles: { articles } }
-  if (articles.length > 0) {
-    res.render("index", artObj);
-  } else {
-    const ifArticle = { Article: "Yes" };
-    res.render("index", ifArticle);
-  }
+  DB_Article.getDeletedItemById(id)
+    .then(results => {
+      const reference_id = (results.rows[0]).reference_id;
+      DB_Article.restoreDeletedItem(reference_id)
+        .then(results => {
+          DB_Article.deleteFromDeleted(id)
+            .then(results => {
+              DB_Article.all()
+                .then(results => {
+                  const articles = results.rows;
+                  const artObj = { Articles: { articles } }
+                  if (articles.length > 0) {
+                    res.render("index", artObj);
+                  } else {
+                    const ifArticle = { Article: "Yes" };
+                    res.render("index", ifArticle);
+                  }
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            })
+            .catch(err => {
+              console.log('error', err)
+            })
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles/deleted/:id", (req, res) => {
   const { id } = req.params;
-  const article = DB_Article.getDeletedItemById(id);
-  res.render("deletedArticle", article);
+  DB_Article.getDeletedItemById(id)
+    .then(results => {
+      const article = results.rows[0];
+      res.render("deletedArticle", article);
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles/old/:id/:version/restore", (req, res) => {
-  const version = (req.params).id;
-  const id = (req.params).version;
-  const article = DB_Article.getPreviousItemById(id, version);
-  DB_Article.restorePreviousItemVersion(id, article);
-  const articles = DB_Article.all();
-  const artObj = { Articles: { articles } }
-  if (articles.length > 0) {
-    res.render("index", artObj);
-  } else {
-    const ifArticle = { Article: "Yes" };
-    res.render("index", ifArticle);
-  }
+  const id = (req.params).id;
+  const version = (req.params).version;
+  DB_Article.getItemById(id)
+    .then(results => {
+      const info = results.rows[0];
+      DB_Article.insertOldItem(info)
+        .then(results => {
+          DB_Article.getPreviousItemById(id, version)
+            .then(results => {
+              const article = results.rows[0];
+              DB_Article.restorePreviousItem(id, article)
+                .then(results => {
+                  DB_Article.all()
+                    .then(results => {
+                      const articles = results.rows;
+                      const artObj = { Articles: { articles } }
+                      if (articles.length > 0) {
+                        res.render("index", artObj);
+                      } else {
+                        const ifArticle = { Article: "Yes" };
+                        res.render("index", ifArticle);
+                      }
+                    })
+                    .catch(err => {
+                      console.log('error', err)
+                    })
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            })
+            .catch(err => {
+              console.log('error', err)
+            })
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles/old/:id/:version", (req, res) => {
-  const version = (req.params).id;
-  const id = (req.params).version;
-  const article = DB_Article.getPreviousItemById(id, version);
-  res.render("previousArticle", article);
+  const id = (req.params).id;
+  const version = (req.params).version;
+  DB_Article.getPreviousItemById(id, version)
+    .then(results => {
+      const article = results.rows[0];
+      res.render("previousArticle", article);
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.get("/articles", (req, res) => {
-  const articles = DB_Article.all();
-  const artObj = { Articles: { articles } }
-  if (articles.length > 0) {
-    res.render("index", artObj);
-  } else {
-    const ifArticle = { Article: "Yes" };
-    res.render("index", ifArticle);
-  }
+  DB_Article.all()
+    .then(results => {
+      const articles = results.rows;
+      const artObj = { Articles: { articles } }
+      if (articles.length > 0) {
+        res.render("index", artObj);
+      } else {
+        const ifArticle = { Article: "Yes" };
+        res.render("index", ifArticle);
+      }
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 Router.post("/articles", (req, res) => {
-  if (isNaN(((req.body).title)) === true && isNaN(((req.body).body)) === true && isNaN(((req.body).author)) === true) {
+  if (DB_Article.ifChecker(req.body) === true) {
     const submittedArticle = req.body;
-    DB_Article.add(submittedArticle);
-    res.redirect("/articles");
+    DB_Article.add(submittedArticle)
+      .then(results => {
+        res.redirect("/articles");
+      })
+      .catch(err => {
+        console.log('error', err)
+      })
   } else {
     const ifArticle = { Article: "Yes" };
     res.render("new-redirect", ifArticle);
@@ -168,40 +293,124 @@ Router.post("/articles", (req, res) => {
 })
 
 Router.put("/articles/:id", (req, res) => {
-  if (isNaN(((req.body).title)) === true && isNaN(((req.body).body)) === true && isNaN(((req.body).author)) === true) {
+  if (DB_Article.ifChecker(req.body) === true) {
     const { id } = req.params;
     const submittedArticle = req.body;
-    DB_Article.updateItemById(id, submittedArticle);
-    const newTitle = submittedArticle.title
-    res.redirect(`/articles/${newTitle}`);
+    DB_Article.getItemById(id)
+      .then(results => {
+        info = results.rows[0];
+        DB_Article.insertOldItem(info)
+          .then(results => {
+            DB_Article.updateItemById(id, submittedArticle)
+              .then(results => {
+                const newTitle = submittedArticle.title;
+                res.redirect(`/articles/${newTitle}`);
+              })
+              .catch(err => {
+                console.log('error', err)
+              })
+          })
+          .catch(err => {
+            console.log('error', err)
+          })
+      })
+      .catch(err => {
+        console.log('error', err)
+      })
   } else {
     const { id } = req.params;
-    const article = DB_Article.getItemById(id);
-    const ifArticle = { Article: "Yes", Error: "Input", article };
-    res.render("edit-redirect-one", ifArticle);
+    DB_Article.getItemById(id)
+      .then(results => {
+        article = results.rows[0];
+        const ifArticle = { Article: "Yes", Error: "Input", article };
+        res.render("edit-redirect-one", ifArticle);
+      })
+      .catch(err => {
+        console.log('error', err)
+      })
   }
 })
 
 Router.delete("/articles/:title", (req, res) => {
   const { title } = req.params;
-  const allArr = DB_Article.all();
-  let filteredArr = allArr.filter(article => article.title === title);
-  if (filteredArr.length > 0) {
-    if (allArr.length - 1 > 0) {
-      DB_Article.deleteItemByTitle(title);
-      const articles = DB_Article.all();
-      const artObj = { Articles: { articles } };
-      res.render("indexDeleted", artObj);
-    } else {
-      DB_Article.deleteItemByTitle(title);
-      const articles = DB_Article.all();
-      const ifArticle = { Article: { articles } };
-      res.render("indexDeleted", ifArticle);
-    }
-  } else {
-    const ifArticle = { Article: "Yes", Error: "Title" };
-    res.render("delete-redirect", ifArticle);
-  }
+  DB_Article.all()
+    .then(results => {
+      allArr = results.rows;
+      DB_Article.filter(title)
+        .then(results => {
+          let filteredArr = results.rows;
+          if (filteredArr.length > 0) {
+            if (allArr.length - 1 > 0) {
+              DB_Article.getItemByTitle(title)
+                .then(results => {
+                  info = results.rows[0];
+                  DB_Article.insertDeletedItem(info)
+                    .then(results => {
+                      DB_Article.deleteItemByTitle(title)
+                        .then(results => {
+                          DB_Article.all()
+                            .then(results => {
+                              articles = results.rows;
+                              const artObj = { Articles: { articles } };
+                              res.render("indexDeleted", artObj);
+                            })
+                            .catch(err => {
+                              console.log('error', err)
+                            })
+                        })
+                        .catch(err => {
+                          console.log('error', err)
+                        })
+                    })
+                    .catch(err => {
+                      console.log('error', err)
+                    })
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            } else {
+              DB_Article.getItemByTitle(title)
+                .then(results => {
+                  let info = results.rows[0];
+                  DB_Article.insertDeletedItem(info)
+                    .then(results => {
+                      DB_Article.deleteItemByTitle(title)
+                        .then(results => {
+                          DB_Article.all()
+                            .then(results => {
+                              const articles = results.rows;
+                              const ifArticle = { Article: { articles } };
+                              res.render("indexDeleted", ifArticle);
+                            })
+                            .catch(err => {
+                              console.log('error', err)
+                            })
+                        })
+                        .catch(err => {
+                          console.log('error', err)
+                        })
+                    })
+                    .catch(err => {
+                      console.log('error', err)
+                    })
+                })
+                .catch(err => {
+                  console.log('error', err)
+                })
+            }
+          } else {
+            const ifArticle = { Article: "Yes", Error: "Title" };
+            res.render("delete-redirect", ifArticle);
+          }
+        })
+        .catch(err => {
+          console.log('error', err)
+        })
+    })
+    .catch(err => {
+      console.log('error', err)
+    })
 })
 
 module.exports = Router;
